@@ -1,0 +1,5 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/alohdr/My Data/exam raya/go-rest-api'
+migrate -path migrations -database "postgresql://postgres:password@localhost:5432/bank?sslmode=disable" -verbose up 
+make: Leaving directory '/home/alohdr/My Data/exam raya/go-rest-api'
+ 
