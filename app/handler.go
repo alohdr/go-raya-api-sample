@@ -197,9 +197,9 @@ func (h Handler) handleGetFavoriteTransaction(w http.ResponseWriter, r *http.Req
 
 	if r.Method == "GET" {
 
-		//filter := r.FormValue("bank_name")
+		filter := r.FormValue("user")
 
-		response, err := h.service.GetFavoriteTransaction(ctx)
+		response, err := h.service.GetFavoriteTransaction(ctx, filter)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -299,7 +299,7 @@ func (h Handler) handleUpdateStatusTransaction(w http.ResponseWriter, r *http.Re
 	w.Header().Set("Content-Type", "application/json")
 	var ctx context.Context = context.Background()
 
-	if r.Method == "PUT" {
+	if r.Method == "POST" {
 
 		status, err := ioutil.ReadAll(r.Body)
 		if err != nil {

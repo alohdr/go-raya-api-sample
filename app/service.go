@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"go-rest-api/db"
 	"go-rest-api/redis"
+	"go-rest-api/utils"
 	"os"
 	"time"
 )
@@ -283,10 +284,10 @@ func (s Service) GetLastTransaction(ctx context.Context, reqUser string, reqBank
 	}
 	return &dest, nil
 }
-func (s Service) GetFavoriteTransaction(ctx context.Context) (*FavoriteTransactionResponses, error) {
+func (s Service) GetFavoriteTransaction(ctx context.Context, reqUser string) (*FavoriteTransactionResponses, error) {
 	dest := FavoriteTransactionResponses{}
 
-	get, err := s.repository.GetFavoriteTransaction(ctx)
+	get, err := s.repository.GetFavoriteTransaction(ctx, reqUser)
 	if err != nil {
 		return nil, err
 	}
@@ -391,8 +392,10 @@ func (s Service) InsertTransaction(ctx context.Context, req []byte) (*Transactio
 		return nil, errors.New("complete your form")
 	}
 
+	id := uuid.New().String()
+
 	createTransaction := Transaction{
-		TransactionID:       transaction.TransactionID,
+		TransactionID:       id,
 		UserID:              transaction.UserID,
 		AccountID:           transaction.AccountID,
 		BankID:              transaction.BankID,
@@ -408,7 +411,9 @@ func (s Service) InsertTransaction(ctx context.Context, req []byte) (*Transactio
 		return nil, err
 	}
 
-	get, errGet := s.repository.GetTransactionDetail(ctx, transaction.TransactionID)
+	go utils.Publisher(id)
+
+	get, errGet := s.repository.GetTransactionDetail(ctx, id)
 	if errGet != nil {
 		return nil, errGet
 	}
