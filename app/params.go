@@ -24,7 +24,7 @@ type (
 	}
 
 	Transaction struct {
-		TransactionID       string `json:"transaction_id" form:"transaction_id"`
+		TransactionID       string `json:"transaction_id" form:"transaction_id omitempty"`
 		UserID              string `json:"user_id" form:"user_id"`
 		AccountID           string `json:"account_id" form:"account_id"`
 		BankID              string `json:"bank_id" form:"bank_id"`

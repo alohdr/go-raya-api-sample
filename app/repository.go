@@ -228,6 +228,8 @@ func (r Repository) GetLastTransactionByParams(ctx context.Context, reqUser stri
 				order by bank.transactions.account_id, bank.transactions.created_at  desc
 				limit 10`, utils.Table_Transactions, utils.Table_Transactions, utils.Table_Accounts, utils.Table_Bank)
 
+	reqBank = fmt.Sprint("%" + reqBank + "%")
+
 	rows, err := r.db.QueryContext(ctx, qsyntax, reqUser, reqBank)
 	if err != nil {
 		return nil, err
@@ -249,7 +251,7 @@ func (r Repository) GetLastTransactionByParams(ctx context.Context, reqUser stri
 
 	return rowsScanArr, nil
 }
-func (r Repository) GetFavoriteTransaction(ctx context.Context) ([]FavoriteTransactionModel, error) {
+func (r Repository) GetFavoriteTransaction(ctx context.Context, reqUser string) ([]FavoriteTransactionModel, error) {
 	qsyntax := fmt.Sprintf(`SELECT 
 				transactions.transaction_id, 
 				bank.bank_code, 
@@ -263,11 +265,11 @@ func (r Repository) GetFavoriteTransaction(ctx context.Context) ([]FavoriteTrans
 				on bank.accounts.account_id = bank.transactions.account_id
 				join %s
 				on bank.bank.bank_id = bank.transactions.bank_id 
-				where bank.transactions.is_favorite = true
+				where bank.transactions.is_favorite = true and user_id = $1
 				order by created_at
 				limit 10`, utils.Table_Transactions, utils.Table_Accounts, utils.Table_Bank)
 
-	rows, err := r.db.QueryContext(ctx, qsyntax)
+	rows, err := r.db.QueryContext(ctx, qsyntax, reqUser)
 	if err != nil {
 		return nil, err
 	}
