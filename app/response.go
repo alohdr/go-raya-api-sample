@@ -4,6 +4,7 @@ import "time"
 
 type (
 	BankResponse struct {
+		BankID       string     `json:"bank_id"`
 		BankCode     string     `json:"bank_code"`
 		BankName     string     `json:"bank_name"`
 		BankAdminFee int        `json:"bank_admin_fee"`

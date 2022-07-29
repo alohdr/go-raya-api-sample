@@ -7,3 +7,7 @@ const (
 	Table_Transactions = `bank.transactions`
 	LayoutDateTime     = "2006-Jan-02"
 )
+
+var (
+	REDIS_HOST = `localhost:6379`
+)

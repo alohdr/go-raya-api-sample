@@ -4,8 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"go-rest-api/db"
+	"go-rest-api/redis"
+	"os"
+	"time"
 )
 
 type (
@@ -17,7 +21,8 @@ type (
 func NewService() Service {
 	return Service{
 		repository: Repository{
-			db: db.Postgres(),
+			db:  db.Postgres(),
+			rdb: redis.NewRedisClient(os.Getenv("REDIS_HOST"), ""),
 		},
 	}
 }
@@ -112,6 +117,7 @@ func (s Service) GetAllBank(ctx context.Context, req string) (*BankResponses, er
 
 		for _, val := range getName {
 			dest = append(dest, BankResponse{
+				BankID:       val.BankID,
 				BankCode:     val.BankCode,
 				BankName:     val.BankName,
 				BankAdminFee: val.BankAdminFee,
@@ -126,25 +132,57 @@ func (s Service) GetAllBank(ctx context.Context, req string) (*BankResponses, er
 		return &dest, nil
 	}
 
-	get, err := s.repository.GetAllBank(ctx)
-	if err != nil {
-		return nil, err
+	key := "bank"
+	ttl := time.Duration(30) * time.Second
+
+	resp, errResp := s.repository.RedisGet(ctx, key)
+	fmt.Println(resp)
+	if errResp != nil {
+		get, err := s.repository.GetAllBank(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, val := range get {
+			dest = append(dest, BankResponse{
+				BankID:       val.BankID,
+				BankCode:     val.BankCode,
+				BankName:     val.BankName,
+				BankAdminFee: val.BankAdminFee,
+				BankIcon:     val.BankIcon,
+				// CreatedAt:    val.CreatedAt.Format(utils.LayoutDateTime),
+				CreatedAt: val.CreatedAt,
+				UpdatedAt: val.UpdatedAt,
+				DeletedAt: val.DeletedAt,
+			})
+		}
+
+		errSetRedis := s.repository.RedisSet(ctx, key, &dest, ttl)
+		if errSetRedis != nil {
+			return nil, errors.New("CANT SET REDIS DB")
+		}
+
+		fmt.Println("masuk disini")
+
+		return &dest, nil
 	}
 
-	for _, val := range get {
+	for _, val := range resp {
 		dest = append(dest, BankResponse{
+			BankID:       val.BankID,
 			BankCode:     val.BankCode,
 			BankName:     val.BankName,
 			BankAdminFee: val.BankAdminFee,
 			BankIcon:     val.BankIcon,
-			// CreatedAt:    val.CreatedAt.Format(utils.LayoutDateTime),
-			CreatedAt: val.CreatedAt,
-			UpdatedAt: val.UpdatedAt,
-			DeletedAt: val.DeletedAt,
+			CreatedAt:    val.CreatedAt,
+			UpdatedAt:    val.UpdatedAt,
+			DeletedAt:    val.DeletedAt,
 		})
 	}
 
+	fmt.Println("dariredis")
 	return &dest, nil
+
 }
 func (s Service) InsertBank(ctx context.Context, req BankCollect) (*BankCollect, error) {
 

@@ -3,13 +3,17 @@ package app
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis/v9"
 	"go-rest-api/utils"
+	"time"
 )
 
 type (
 	Repository struct {
-		db *sql.DB
+		db  *sql.DB
+		rdb *redis.Client
 	}
 )
 
@@ -101,7 +105,7 @@ func (r Repository) GetAllBank(ctx context.Context) ([]BankModel, error) {
 	//Fetch data to struct
 	for rows.Next() {
 		var rowsScan BankModel
-		err := rows.Scan(&rowsScan.BankCode, &rowsScan.BankName, &rowsScan.BankAdminFee, &rowsScan.BankIcon, &rowsScan.CreatedAt, &rowsScan.UpdatedAt, &rowsScan.DeletedAt)
+		err := rows.Scan(&rowsScan.BankID, &rowsScan.BankCode, &rowsScan.BankName, &rowsScan.BankAdminFee, &rowsScan.BankIcon, &rowsScan.CreatedAt, &rowsScan.UpdatedAt, &rowsScan.DeletedAt)
 
 		if err != nil {
 			return nil, err
@@ -424,4 +428,29 @@ func (r Repository) InsertTransaction(ctx context.Context, req Transaction) erro
 	}
 
 	return nil
+}
+func (r Repository) RedisSet(ctx context.Context, key string, data interface{}, ttl time.Duration) error {
+	val, err := json.Marshal(data)
+	if err != nil {
+		fmt.Printf("unable to SET data. error: %v", err)
+		return err
+	}
+
+	r.rdb.Set(ctx, key, string(val), ttl)
+	return nil
+}
+func (r Repository) RedisGet(ctx context.Context, key string) (BankResponses, error) {
+	dest := BankResponses{}
+	res, err := r.rdb.Get(ctx, key).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	errUnmarshal := json.Unmarshal([]byte(res), &dest)
+	if errUnmarshal != nil {
+		return nil, errUnmarshal
+	}
+
+	fmt.Println("ini get redis di repo")
+	return dest, nil
 }
