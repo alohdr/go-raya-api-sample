@@ -1,0 +1,7 @@
+services:
+  go-rest-api-raya:
+    image: alohdr/go-rest-api
+    container_name: go-rest-api
+    restart: unless-stopped
+    ports:
+      - 8088:80

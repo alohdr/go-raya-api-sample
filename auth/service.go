@@ -45,7 +45,7 @@ func (s Service) Login(ctx context.Context, param LoginParams) (*LoginResponse, 
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(cfg.Secret)
+	tokenString, err := token.SignedString([]byte(cfg.Secret))
 	if err != nil {
 		return nil, err
 	}
