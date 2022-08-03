@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"go-rest-api/app"
+	"go-rest-api/auth"
 	"go-rest-api/config"
 	"net/http"
 )
@@ -14,14 +15,10 @@ func NewServer() {
 	server := new(http.Server)
 	server.Addr = host
 
-	//var redisHost = "localhost:6379"
-	//var redisPassword = ""
-	//
-	//rdb := redis.NewRedisClient(redisHost, redisPassword)
-	//fmt.Println("redis client initialized ", rdb)
-
 	appService := app.NewService()
+	authService := auth.NewService()
 	app.NewRouter(appService)
+	auth.NewRouter(authService)
 
 	fmt.Printf("Server Running on locahost%v", host)
 
